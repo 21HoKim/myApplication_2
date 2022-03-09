@@ -13,24 +13,15 @@
         android:theme="@style/Theme.MyApplication_1"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".comments"
-            android:exported="false" />
-        <activity
             android:name=".signInActivity"
             android:exported="false" />
         <activity
             android:name=".signUpActivity"
             android:exported="false"
             android:parentActivityName=".signUpActivity" />
-        <activity
-            android:name=".initActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+        <activity android:name=".postlistActivity" />
+        <activity android:name=".RegisterActivity"/>
+        <activity android:name=".DetailActivity"/>
     </application>
 
 </manifest>

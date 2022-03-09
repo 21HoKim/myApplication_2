@@ -1,389 +1,165 @@
 package com.example.myapplication_1;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Context;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.io.IOException;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-import javax.net.ssl.HttpsURLConnection;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class DetailActivity extends AppCompatActivity{
-    /*
-    // 로그에 사용할 TAG
-    final private String TAG = getClass().getSimpleName();
+    TextView category,shopname,title,content,URL,min,Remain,postTime,userName_1;
 
-    // 사용할 컴포넌트 선언
-    TextView title_tv, content_tv, date_tv;
-    LinearLayout comment_layout;
-    EditText comment_et;
-    Button reg_button;
-
-    // 선택한 게시물의 번호
-    String board_seq = "";
-
-    // 유저아이디 변수
-    String userid = "";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+        Intent intent = getIntent();
+        int postNum_11=intent.getExtras().getInt("postNum");
+        //System.out.println(postNum_11);
+
+        TextView textview = new TextView(this);
+        // url 생성
+        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://ktl-last.herokuapp.com/posts/"+postNum_11).newBuilder();
+
+        String url = urlBuilder.build().toString();
+
+        // json 객체 생성
+        JSONObject obj = new JSONObject();
+        try {
+            OkHttpClient client = new OkHttpClient();
+            RequestBody formBody = RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"),
+                    obj.toString()
+            );
+            Request request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .build();
+
+            // 응답 콜백
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    System.out.println("Error is"+e.toString());
+                    //e.printStackTrace();
+                }
+
+                @Override
+                public void onResponse(Call call, final Response response) throws IOException {
+                    //System.out.println("Response Body is "+response.body().string());
+                    if (response.isSuccessful()) {
+                        System.out.println("응답 성공");
+                        ResponseBody body=response.body();
+                        try{
+                            final String[] items = new String[]{"1인분", "한식", "분식", "카페,디저트", "돈까스,회,일식", "치킨", "피자", "아시안,양식","중국집","족발,보쌈","야식","찜,탕","도시락","패스트푸트"};
+
+                            assert body != null;
+                            String list_content = body.string();
+                            //json 파싱
+                            JSONParser parser = new JSONParser();
+                            JSONObject object =(JSONObject) parser.parse(list_content);
+                            JSONArray pares_data =(JSONArray) object.get("data");
+                            JSONObject pares_dataList=(JSONObject) pares_data.get(0);
+                            JSONArray pares_postArray=(JSONArray) pares_dataList.get("content");
+                            JSONArray pares_postArray_2=(JSONArray) pares_dataList.get("comment");
+
+
+                            JSONObject pares_content=(JSONObject) pares_postArray.get(0);
+                            long postNum1=(long)pares_content.get("postNum");
+                            int postNum=(int) postNum1;
+                            String nameStore=(String)pares_content.get("nameStore");
+                            long postCategory_1=(long)pares_content.get("postCategory");
+                            String postTitle=(String)pares_content.get("postTitle");
+                            String postContent=(String)pares_content.get("postContent");
+                            String postURL=(String)pares_content.get("postURL");
+                            long postState=(long)pares_content.get("postState");
+                            String postUpTime=(String)pares_content.get("postUpTime");
+                            long costOrderMin_1=(long)pares_content.get("costOrderMin");
+                            long costOrderRemain_1=(long)pares_content.get("costOrderRemain");
+                            String costOrderMin=String.valueOf(costOrderMin_1);
+                            String costOrderRemain=String.valueOf(costOrderRemain_1);
+                            String userName=(String)pares_content.get("userName");
+                            String userID=(String)pares_content.get("userID");
+                            int postCategory=(int) postCategory_1;
+                            postCategory--;
+
+                            /*
+                            System.out.println(nameStore);
+                            System.out.println(postTitle);
+                            System.out.println(postContent);
+                            System.out.println(postURL);
+                            System.out.println(costOrderMin);
+                            System.out.println(costOrderRemain);
+                            */
+                            category=(TextView) findViewById(R.id.category_detail);
+                            shopname=(TextView) findViewById(R.id.shopname_detail);
+                            title=(TextView) findViewById(R.id.title_detail);
+                            content=(TextView) findViewById(R.id.content_detail);
+                            URL=(TextView) findViewById(R.id.text_url_detail);
+                            min=(TextView) findViewById(R.id.min_detail);
+                            Remain=(TextView) findViewById(R.id.Remain_detail);
+                            postTime=(TextView) findViewById(R.id.postTime_detail);
+                            userName_1=(TextView) findViewById(R.id.userName_detail);
+
+                            int finalPostCategory = postCategory;
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    category.setText(items[finalPostCategory]);
+                                    shopname.setText(nameStore);
+                                    title   .setText(postTitle);
+                                    content .setText(postContent);
+                                    URL    .setText(postURL);
+                                    min    .setText(costOrderMin);
+                                    Remain  .setText(costOrderRemain);
+                                    postTime.setText(postUpTime);
+                                    userName_1.setText(userName);
+                                }
+                            });
+
+
+
+                        }
+                        catch (IOException | ParseException e){
+                            e.printStackTrace();
+                        }
+
+
+                    } else {
+                        System.out.println("응답 실패");
+                    }
+
+                }
+            });
+
+        } catch (Exception e) {
+            System.err.println(e.toString());
+        }
+
+
+
         setContentView(R.layout.activity_detail);
 
-// ListActivity 에서 넘긴 변수들을 받아줌
-        board_seq = getIntent().getStringExtra("board_seq");
-        userid = getIntent().getStringExtra("userid");
 
-// 컴포넌트 초기화
-        title_tv = findViewById(R.id.title_tv);
-        content_tv = findViewById(R.id.content_tv);
-        date_tv = findViewById(R.id.date_tv);
 
-        comment_layout = findViewById(R.id.comment_layout);
-        comment_et = findViewById(R.id.comment_et);
-        reg_button = findViewById(R.id.reg_button);
-
-// 등록하기 버튼을 눌렀을 때 댓글 등록 함수 호출
-        reg_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                RegCmt regCmt = new RegCmt();
-                regCmt.execute(userid, comment_et.getText().toString(), board_seq);
-            }
-        });
-
-// 해당 게시물의 데이터 불러오기
-        InitData();
 
     }
 
-    private void InitData(){
-
-// 해당 게시물의 데이터를 읽어오는 함수, 파라미터로 보드 번호를 넘김
-        LoadBoard loadBoard = new LoadBoard();
-        loadBoard.execute(board_seq);
-
-    }
-
-    class LoadBoard extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            Log.d(TAG, "onPreExecute");
-        }
-
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-            Log.d(TAG, "onPostExecute, " + result);
-            try {
-// 결과값이 JSONArray 형태로 넘어오기 때문에
-// JSONArray, JSONObject 를 사용해서 파싱
-                JSONArray jsonArray = null;
-                jsonArray = new JSONArray(result);
-
-                for(int i=0;i<jsonArray.length();i++){
-                    JSONObject jsonObject = jsonArray.getJSONObject(i);
-
-// Database 의 데이터들을 변수로 저장한 후 해당 TextView 에 데이터 입력
-                    String title = jsonObject.optString("title");
-                    String content = jsonObject.optString("content");
-                    String crt_dt = jsonObject.optString("crt_dt");
-
-                    title_tv.setText(title);
-                    content_tv.setText(content);
-                    date_tv.setText(crt_dt);
-
-                }
-
-// 해당 게시물에 대한 댓글 불러오는 함수 호출, 파라미터로 게시물 번호 넘김
-                LoadCmt loadCmt = new LoadCmt();
-                loadCmt.execute(board_seq);
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-        }
-
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            String board_seq = params[0];
-
-// 호출할 php 파일 경로
-            String server_url = "https://ktl-last.herokuapp.com/posts/8"; //postNum은 동적으로 할당
-
-
-            URL url;
-            String response = "";
-            try {
-                url = new URL(server_url);
-
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setReadTimeout(15000);
-                conn.setConnectTimeout(15000);
-                conn.setRequestMethod("GET");
-                conn.setDoInput(true);
-                conn.setDoOutput(true);
-                Uri.Builder builder = new Uri.Builder()
-                        .appendQueryParameter("board_seq", board_seq);
-                String query = builder.build().getEncodedQuery();
-
-                OutputStream os = conn.getOutputStream();
-                BufferedWriter writer = new BufferedWriter(
-                        new OutputStreamWriter(os, "UTF-8"));
-                writer.write(query);
-                writer.flush();
-                writer.close();
-                os.close();
-
-                conn.connect();
-                int responseCode=conn.getResponseCode();
-
-                if (responseCode == HttpsURLConnection.HTTP_OK) {
-                    String line;
-                    BufferedReader br=new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    while ((line=br.readLine()) != null) {
-                        response+=line;
-                    }
-                }
-                else {
-                    response="";
-
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            return response;
-        }
-    }
-
-
-    // 게시물의 댓글을 읽어오는 함수
-    class LoadCmt extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            Log.d(TAG, "onPreExecute");
-        }
-
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-            Log.d(TAG, "onPostExecute, " + result);
-
-// 댓글을 뿌릴 LinearLayout 자식뷰 모두 제거
-            comment_layout.removeAllViews();
-
-            try {
-
-// JSONArray, JSONObject 로 받은 데이터 파싱
-                JSONArray jsonArray = null;
-                jsonArray = new JSONArray(result);
-
-// custom_comment 를 불러오기 위한 객체
-                LayoutInflater layoutInflater = LayoutInflater.from(DetailActivity.this);
-
-                for(int i=0;i<jsonArray.length();i++){
-
-// custom_comment 의 디자인을 불러와서 사용
-                    View customView = layoutInflater.inflate(R.layout.custom_comment, null);
-                    JSONObject jsonObject = jsonArray.getJSONObject(i);
-
-                    String userid= jsonObject.optString("userid");
-                    String content = jsonObject.optString("content");
-                    String crt_dt = jsonObject.optString("crt_dt");
-
-                    ((TextView)customView.findViewById(R.id.cmt_userid_tv)).setText(userid);
-                    ((TextView)customView.findViewById(R.id.cmt_content_tv)).setText(content);
-                    ((TextView)customView.findViewById(R.id.cmt_date_tv)).setText(crt_dt);
-
-// 댓글 레이아웃에 custom_comment 의 디자인에 데이터를 담아서 추가
-                    comment_layout.addView(customView);
-                }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-        }
-
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            String board_seq = params[0];
-            String server_url = "http://15.164.252.136/load_cmt.php";
-
-
-            URL url;
-            String response = "";
-            try {
-                url = new URL(server_url);
-
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setReadTimeout(15000);
-                conn.setConnectTimeout(15000);
-                conn.setRequestMethod("POST");
-                conn.setDoInput(true);
-                conn.setDoOutput(true);
-                Uri.Builder builder = new Uri.Builder()
-                        .appendQueryParameter("board_seq", board_seq);
-                String query = builder.build().getEncodedQuery();
-
-                OutputStream os = conn.getOutputStream();
-                BufferedWriter writer = new BufferedWriter(
-                        new OutputStreamWriter(os, "UTF-8"));
-                writer.write(query);
-                writer.flush();
-                writer.close();
-                os.close();
-
-                conn.connect();
-                int responseCode=conn.getResponseCode();
-
-                if (responseCode == HttpsURLConnection.HTTP_OK) {
-                    String line;
-                    BufferedReader br=new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    while ((line=br.readLine()) != null) {
-                        response+=line;
-                    }
-                }
-                else {
-                    response="";
-
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            return response;
-        }
-    }
-
-    // 댓글을 등록하는 함수
-    class RegCmt extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            Log.d(TAG, "onPreExecute");
-        }
-
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-            Log.d(TAG, "onPostExecute, " + result);
-
-// 결과값이 성공으로 나오면
-            if(result.equals("success")){
-
-//댓글 입력창의 글자는 공백으로 만듦
-                comment_et.setText("");
-
-// 소프트 키보드 숨김처리
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(comment_et.getWindowToken(), 0);
-
-// 토스트메시지 출력
-                Toast.makeText(DetailActivity.this, "댓글이 등록되었습니다.", Toast.LENGTH_SHORT).show();
-
-// 댓글 불러오는 함수 호출
-                LoadCmt loadCmt = new LoadCmt();
-                loadCmt.execute(board_seq);
-            }else
-            {
-                Toast.makeText(DetailActivity.this, result, Toast.LENGTH_SHORT).show();
-            }
-        }
-
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            String userid = params[0];
-            String content = params[1];
-            String board_seq = params[2];
-
-            String server_url = "http://15.164.252.136/reg_comment.php";
-
-
-            URL url;
-            String response = "";
-            try {
-                url = new URL(server_url);
-
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setReadTimeout(15000);
-                conn.setConnectTimeout(15000);
-                conn.setRequestMethod("POST");
-                conn.setDoInput(true);
-                conn.setDoOutput(true);
-                Uri.Builder builder = new Uri.Builder()
-                        .appendQueryParameter("userid", userid)
-                        .appendQueryParameter("content", content)
-                        .appendQueryParameter("board_seq", board_seq);
-                String query = builder.build().getEncodedQuery();
-
-                OutputStream os = conn.getOutputStream();
-                BufferedWriter writer = new BufferedWriter(
-                        new OutputStreamWriter(os, "UTF-8"));
-                writer.write(query);
-                writer.flush();
-                writer.close();
-                os.close();
-
-                conn.connect();
-                int responseCode=conn.getResponseCode();
-
-                if (responseCode == HttpsURLConnection.HTTP_OK) {
-                    String line;
-                    BufferedReader br=new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    while ((line=br.readLine()) != null) {
-                        response+=line;
-                    }
-                }
-                else {
-                    response="";
-
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            return response;
-        }
-    }*/
 }
